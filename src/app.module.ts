@@ -5,9 +5,10 @@ import { SessionModule } from './modules/session/session.module';
 import { AuthModule } from './modules/auth/auth.module';
 import Joi from 'joi';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { async } from 'rxjs';
 import { EnvironmentVariables } from './common/types/environment-variables.types';
 import { DatabaseModule } from './modules/database/database.module';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { join } from 'path';
 
 @Module({
 	imports: [
@@ -48,6 +49,13 @@ import { DatabaseModule } from './modules/database/database.module';
 					auth: {
 						user: configService.get('MAIL_USER'),
 						pass: configService.get('MAIL_PASS'),
+					},
+				},
+				template: {
+					dir: join(__dirname, 'templates', 'email'),
+					adapter: new HandlebarsAdapter(),
+					options: {
+						strict: true,
 					},
 				},
 				defaults: {

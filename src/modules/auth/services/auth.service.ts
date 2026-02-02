@@ -47,7 +47,10 @@ export class AuthService {
 			.sendMail({
 				to: email,
 				subject: 'Codul tau de activare',
-				html: `<b>Codul tău este: ${activation_code.split('').join('-')}</b>`,
+				template: 'activation',
+				context: {
+					activation_code: activation_code.split('').join('-'),
+				},
 			})
 			.catch((err) => {
 				console.error(
