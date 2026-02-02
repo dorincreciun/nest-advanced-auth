@@ -3,6 +3,7 @@ import {ConfigService} from "@nestjs/config";
 import {EnvironmentVariables} from "../../common/types/environment-variables.types";
 import {Pool} from "pg";
 import {PG_CONNECTION} from "../../common/constants/providers-keys.constants";
+import { DatabaseService } from './service/database.service';
 
 @Global()
 @Module({
@@ -20,8 +21,12 @@ import {PG_CONNECTION} from "../../common/constants/providers-keys.constants";
                 })
             }
         },
+		DatabaseService,
     ],
-    exports: [PG_CONNECTION],
+    exports: [
+		PG_CONNECTION,
+		DatabaseService
+	],
 })
 
 export class DatabaseModule {}

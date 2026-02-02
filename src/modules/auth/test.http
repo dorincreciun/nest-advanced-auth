@@ -1,0 +1,17 @@
+### Testare Register - Succes
+POST http://localhost:5000/auth/register
+Content-Type: application/json
+
+{
+  "email": "creciundorin25@gmail.com",
+  "password": "Password123!"
+}
+
+### Testare Register - Email deja existent (Conflict)
+POST http://localhost:5000/auth/register
+Content-Type: application/json
+
+{
+  "email": "creciundorin25@gmail.com",
+  "password": "Password123!"
+}

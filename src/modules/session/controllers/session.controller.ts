@@ -1,0 +1,10 @@
+import { Controller, Post } from '@nestjs/common';
+
+@Controller('session')
+export class SessionController {
+	@Post('refresh')
+	refresh() {}
+
+	@Post('logout')
+	logout() {}
+}
