@@ -1,21 +1,24 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { UserService } from '../../user/services/user.service';
-import { SessionService } from '../../session/services/session.service';
 import { RegisterDto } from '../dto/register.dto';
 import { EX_MESSAGES } from '../../../common/constants/exception-messages.constants';
 import * as bcrypt from 'bcrypt';
 import { randomInt } from 'node:crypto';
-import { MailerService } from '@nestjs-modules/mailer';
+import { TokenService } from '../../token/services/token.service';
+import { RegisterParams } from '../interfaces/auth.interface';
+import { SessionService } from '../../session/services/session.service';
+import { CreateSessionParams } from '../../session/interface/session.interface';
 
 @Injectable()
 export class AuthService {
 	constructor(
 		private readonly userService: UserService,
-		private readonly mailerService: MailerService,
+		private readonly tokenService: TokenService,
+		private readonly sessionService: SessionService,
 	) {}
 
-	async register(dto: RegisterDto) {
-		const { email, password } = dto;
+	async register(data: RegisterParams) {
+		const { email, password } = data.dto;
 
 		// 1. Căutăm dacă un email de tipul dat a fost înregistrat sau nu
 		const existingUser = await this.userService.findByEmail(email);
@@ -32,34 +35,25 @@ export class AuthService {
 		const activation_code = randomInt(100000, 1000000).toString();
 
 		// 5. Salvează noul utilizator în baza de date cu:
-		//    - hash-ul parolei
-		//    - codul de activare
-		//    - is_active: false (contul este blocat până la verificare)
-		const newUser = this.userService.create({
+		const newUser = await this.userService.create({
 			email,
 			password_hash,
 			activation_code,
 		});
 
-		// 6. Trimite email-ul de verificare cu codul generat
-		//    (Aici decidem: dacă email-ul eșuează, ce facem cu userul salvat?)
-		this.mailerService
-			.sendMail({
-				to: email,
-				subject: 'Codul tau de activare',
-				template: 'activation',
-				context: {
-					activation_code: activation_code.split('').join('-'),
-				},
-			})
-			.catch((err) => {
-				console.error(
-					`Eroare la trimiterea email-ului către ${email}:`,
-					err,
-				);
-			});
+		// 6. Generam acces si refresh token
+		const [accessToken, refreshToken] =
+			await this.tokenService.generateTokens({ sub: newUser.id });
 
-		// 7. Returnăm un mesaj de succes către client (fără token-uri încă!)
-		return { message: 'Cont creat. Verifică email-ul pentru activare.' };
+		const token_hash = await bcrypt.hash(refreshToken.token, 10)
+
+		// 7. Creiem sesiunea utilizatorului
+		const session = await this.sessionService.create({
+			user_id: newUser.id,
+			user_agent: data.metadata.user_agent,
+			ip_address: data.metadata.ip_address,
+			token_hash: token_hash,
+			expires_at: refreshToken.expires_at
+		});
 	}
 }

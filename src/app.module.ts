@@ -9,6 +9,7 @@ import { EnvironmentVariables } from './common/types/environment-variables.types
 import { DatabaseModule } from './modules/database/database.module';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
+import { TokenModule } from './modules/token/token.module';
 
 @Module({
 	imports: [
@@ -32,6 +33,12 @@ import { join } from 'path';
 				MAIL_USER: Joi.string().required(),
 				MAIL_PASS: Joi.string().required(),
 				MAIL_FROM: Joi.string().required(),
+
+				/* JWT */
+				JWT_ACCESS_SECRET: Joi.string().required(),
+				JWT_ACCESS_EXPIRES_IN: Joi.string().required(),
+				JWT_REFRESH_SECRET: Joi.string().required(),
+				JWT_REFRESH_EXPIRES_IN: Joi.string().required(),
 			}),
 			validationOptions: {
 				allowUnknown: true,
@@ -67,6 +74,7 @@ import { join } from 'path';
 		UserModule,
 		SessionModule,
 		AuthModule,
+		TokenModule,
 	],
 })
 export class AppModule {}
